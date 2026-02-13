@@ -3,7 +3,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    match /yazen-chat-messages/{messageId} {
+    match /psokolov-chat/{messageId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null
                     && request.resource.data.senderId == request.auth.uid;
