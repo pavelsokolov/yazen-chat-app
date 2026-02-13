@@ -1,5 +1,12 @@
-import { useMemo, useRef } from "react";
-import { FlatList, View, Text, ActivityIndicator, StyleSheet } from "react-native";
+import { useCallback, useMemo } from "react";
+import {
+  FlatList,
+  View,
+  Text,
+  ActivityIndicator,
+  StyleSheet,
+  type ListRenderItem,
+} from "react-native";
 import type { Message } from "../types/Message";
 import { colors, fontSize, spacing } from "../theme";
 import MessageItem from "./MessageItem";
@@ -21,9 +28,14 @@ export default function MessageList({
   onLoadMore,
   loadingMore,
 }: Props) {
-  const listRef = useRef<FlatList<Message>>(null);
-
   const invertedData = useMemo(() => [...messages].reverse(), [messages]);
+
+  const renderItem: ListRenderItem<Message> = useCallback(
+    ({ item }) => (
+      <MessageItem message={item} isOwn={item.senderId === currentUserId} onEdit={onEdit} />
+    ),
+    [currentUserId, onEdit],
+  );
 
   if (loading) {
     return (
@@ -44,13 +56,10 @@ export default function MessageList({
 
   return (
     <FlatList
-      ref={listRef}
       inverted
       data={invertedData}
       keyExtractor={(item) => item.id}
-      renderItem={({ item }) => (
-        <MessageItem message={item} isOwn={item.senderId === currentUserId} onEdit={onEdit} />
-      )}
+      renderItem={renderItem}
       ListFooterComponent={
         loadingMore ? (
           <ActivityIndicator size="small" color={colors.primary} style={styles.loadingMore} />

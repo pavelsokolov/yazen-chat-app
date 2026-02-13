@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { formatDistanceToNow } from "date-fns";
 import type { Message } from "../types/Message";
@@ -9,7 +10,7 @@ interface Props {
   onEdit?: (message: Message) => void;
 }
 
-export default function MessageItem({ message, isOwn, onEdit }: Props) {
+export default memo(function MessageItem({ message, isOwn, onEdit }: Props) {
   const time = message.createdAt
     ? formatDistanceToNow(new Date(message.createdAt), { addSuffix: true })
     : "just now";
@@ -39,7 +40,7 @@ export default function MessageItem({ message, isOwn, onEdit }: Props) {
       )}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

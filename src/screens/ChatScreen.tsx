@@ -11,6 +11,7 @@ export default function ChatScreen() {
   const { user, displayName, logout } = useAuth();
   const {
     messages,
+    error,
     loading,
     loadingMore,
     editingMessage,
@@ -18,6 +19,8 @@ export default function ChatScreen() {
     loadMore,
     sendMessage,
   } = useChat();
+
+  if (!user) return null;
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
@@ -40,9 +43,15 @@ export default function ChatScreen() {
 
         <OfflineBanner />
 
+        {error && (
+          <View style={styles.errorBanner}>
+            <Text style={styles.errorText}>Failed to load messages: {error}</Text>
+          </View>
+        )}
+
         <MessageList
           messages={messages}
-          currentUserId={user!.uid}
+          currentUserId={user.uid}
           loading={loading}
           onEdit={setEditingMessage}
           onLoadMore={loadMore}
@@ -97,5 +106,14 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.7,
+  },
+  errorBanner: {
+    backgroundColor: colors.error,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+  },
+  errorText: {
+    color: colors.white,
+    fontSize: fontSize.sm,
   },
 });

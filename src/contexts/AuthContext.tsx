@@ -73,9 +73,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function logout() {
-    await AsyncStorage.removeItem(DISPLAY_NAME_KEY);
-    setDisplayNameState(null);
-    await signOut(auth);
+    try {
+      await AsyncStorage.removeItem(DISPLAY_NAME_KEY);
+      setDisplayNameState(null);
+      await signOut(auth);
+    } catch (err) {
+      console.warn("Logout failed:", err);
+    }
   }
 
   return (

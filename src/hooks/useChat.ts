@@ -1,36 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  collection,
-  query,
-  orderBy,
-  limit,
-  onSnapshot,
-  addDoc,
-  updateDoc,
-  doc,
-  getDocs,
-  startAfter,
-  serverTimestamp,
-  type QueryDocumentSnapshot,
-  type DocumentData,
-  Timestamp,
-} from "firebase/firestore";
+import type { QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
 import { useAuth } from "../contexts/AuthContext";
-import { db } from "../config/firebase";
 import type { Message } from "../types/Message";
-import { MESSAGES_COLLECTION, PAGE_SIZE, MAX_MESSAGE_LENGTH } from "../constants";
-
-function docToMessage(doc: QueryDocumentSnapshot<DocumentData>): Message {
-  const data = doc.data();
-  return {
-    id: doc.id,
-    text: data.text,
-    senderId: data.senderId,
-    senderName: data.senderName,
-    createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate().toISOString() : null,
-    editedAt: data.editedAt instanceof Timestamp ? data.editedAt.toDate().toISOString() : null,
-  };
-}
+import { MAX_MESSAGE_LENGTH } from "../constants";
+import {
+  subscribeToMessages,
+  fetchOlderMessages,
+  createMessage,
+  editMessage,
+} from "../services/messageService";
 
 export function useChat() {
   const { user, displayName } = useAuth();
@@ -40,31 +18,28 @@ export function useChat() {
   const [loadingMore, setLoadingMore] = useState(false);
   const loadingMoreRef = useRef(false);
   const hasMoreRef = useRef(true);
+  const [error, setError] = useState<string | null>(null);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
   const oldestSnapshotRef = useRef<QueryDocumentSnapshot<DocumentData> | null>(null);
   const oldestPaginatedRef = useRef<QueryDocumentSnapshot<DocumentData> | null>(null);
 
-  // Real-time listener for latest messages
   useEffect(() => {
-    const q = query(
-      collection(db, MESSAGES_COLLECTION),
-      orderBy("createdAt", "desc"),
-      limit(PAGE_SIZE),
+    const unsubscribe = subscribeToMessages(
+      (messages, oldestDoc) => {
+        setLiveMessages(messages);
+        if (oldestDoc) oldestSnapshotRef.current = oldestDoc;
+        setError(null);
+        setLoading(false);
+      },
+      (err) => {
+        setError(err.message);
+        setLoading(false);
+      },
     );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const messages = snapshot.docs.map(docToMessage).reverse();
-      setLiveMessages(messages);
-      if (snapshot.docs.length > 0) {
-        oldestSnapshotRef.current = snapshot.docs[snapshot.docs.length - 1];
-      }
-      setLoading(false);
-    });
 
     return unsubscribe;
   }, []);
 
-  // Merge: older paginated messages + live snapshot, deduplicated
   const messages = useMemo(() => {
     const liveIds = new Set(liveMessages.map((m) => m.id));
     const unique = olderMessages.filter((m) => !liveIds.has(m.id));
@@ -80,23 +55,14 @@ export function useChat() {
     loadingMoreRef.current = true;
     setLoadingMore(true);
     try {
-      const q = query(
-        collection(db, MESSAGES_COLLECTION),
-        orderBy("createdAt", "desc"),
-        startAfter(cursor),
-        limit(PAGE_SIZE),
-      );
-      const snapshot = await getDocs(q);
-
-      if (snapshot.docs.length < PAGE_SIZE) {
-        hasMoreRef.current = false;
+      const result = await fetchOlderMessages(cursor);
+      hasMoreRef.current = result.hasMore;
+      if (result.oldestDoc) oldestPaginatedRef.current = result.oldestDoc;
+      if (result.messages.length > 0) {
+        setOlderMessages((prev) => [...result.messages, ...prev]);
       }
-
-      if (snapshot.docs.length > 0) {
-        oldestPaginatedRef.current = snapshot.docs[snapshot.docs.length - 1];
-        const older = snapshot.docs.map(docToMessage).reverse();
-        setOlderMessages((prev) => [...older, ...prev]);
-      }
+    } catch (err) {
+      console.warn("Failed to load more messages:", err);
     } finally {
       loadingMoreRef.current = false;
       setLoadingMore(false);
@@ -111,19 +77,10 @@ export function useChat() {
       }
 
       if (editingMessage) {
-        await updateDoc(doc(db, MESSAGES_COLLECTION, editingMessage.id), {
-          text,
-          editedAt: serverTimestamp(),
-        });
+        await editMessage(editingMessage.id, text);
         setEditingMessage(null);
       } else {
-        await addDoc(collection(db, MESSAGES_COLLECTION), {
-          text,
-          senderId: user.uid,
-          senderName: displayName,
-          createdAt: serverTimestamp(),
-          editedAt: null,
-        });
+        await createMessage(text, user.uid, displayName);
       }
     },
     [user, displayName, editingMessage],
@@ -131,6 +88,7 @@ export function useChat() {
 
   return {
     messages,
+    error,
     loading,
     loadingMore,
     editingMessage,
