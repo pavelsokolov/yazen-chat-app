@@ -1,0 +1,15 @@
+import js from "@eslint/js";
+import tseslint from "typescript-eslint";
+import reactHooks from "eslint-plugin-react-hooks";
+import eslintConfigPrettier from "eslint-config-prettier";
+
+export default tseslint.config(
+  { ignores: ["node_modules/", "dist/", ".expo/"] },
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
+  {
+    plugins: { "react-hooks": reactHooks },
+    rules: reactHooks.configs.recommended.rules,
+  },
+  eslintConfigPrettier,
+);
