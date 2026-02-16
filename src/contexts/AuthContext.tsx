@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { onAuthStateChanged, signInAnonymously, signOut, type User } from "firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { auth } from "../config/firebase";
@@ -28,32 +28,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-    let nameLoaded = false;
-    let authResolved = false;
+
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+      if (mounted) setUser(u);
+    });
 
     async function init() {
       const savedName = await AsyncStorage.getItem(DISPLAY_NAME_KEY);
+      if (!mounted) return;
+
+      setDisplayNameState(savedName);
+
+      if (savedName && !auth.currentUser) {
+        await signInAnonymously(auth);
+      }
+
       if (mounted) {
-        setDisplayNameState(savedName);
-        nameLoaded = true;
-        if (savedName) {
-          await signInAnonymously(auth);
-        }
-        if (authResolved && !savedName) {
-          setLoading(false);
-        }
+        setUser(auth.currentUser);
+        setLoading(false);
       }
     }
-
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
-      if (mounted) {
-        setUser(u);
-        authResolved = true;
-        if (nameLoaded) {
-          setLoading(false);
-        }
-      }
-    });
 
     init().catch((e) => {
       console.warn("Auth init failed:", e);
@@ -66,13 +60,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const setDisplayName = useCallback(async (name: string) => {
+  async function setDisplayName(name: string) {
     await AsyncStorage.setItem(DISPLAY_NAME_KEY, name);
     setDisplayNameState(name);
     await signInAnonymously(auth);
-  }, []);
+  }
 
-  const logout = useCallback(async () => {
+  async function logout() {
     try {
       await AsyncStorage.removeItem(DISPLAY_NAME_KEY);
       setDisplayNameState(null);
@@ -80,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       console.warn("Logout failed:", err);
     }
-  }, []);
+  }
 
   return (
     <AuthContext.Provider value={{ user, displayName, loading, setDisplayName, logout }}>

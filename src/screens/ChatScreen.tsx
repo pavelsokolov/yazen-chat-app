@@ -21,8 +21,6 @@ export default function ChatScreen() {
     deleteMessage,
   } = useChat();
 
-  if (!user) return null;
-
   return (
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
       <KeyboardAvoidingView
@@ -60,6 +58,7 @@ export default function ChatScreen() {
           loadingMore={loadingMore}
         />
         <MessageInput
+          key={editingMessage?.id ?? "new"}
           onSend={sendMessage}
           editingMessage={editingMessage}
           onCancelEdit={() => setEditingMessage(null)}

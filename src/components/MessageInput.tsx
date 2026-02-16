@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { View, TextInput, Pressable, Text, StyleSheet, ActivityIndicator } from "react-native";
 import type { Message } from "../types/Message";
 import { colors, fontSize, spacing, radius } from "../theme";
@@ -11,17 +11,9 @@ interface Props {
 }
 
 export default function MessageInput({ onSend, editingMessage, onCancelEdit }: Props) {
-  const [text, setText] = useState("");
+  const [text, setText] = useState(editingMessage?.text ?? "");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    if (editingMessage) {
-      setText(editingMessage.text);
-    } else {
-      setText("");
-    }
-  }, [editingMessage]);
 
   function handleCancel() {
     setText("");
