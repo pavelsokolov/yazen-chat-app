@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { View, Text, Pressable, StyleSheet, Alert } from "react-native";
 import { formatDistanceToNow } from "date-fns";
 import type { Message } from "../types/Message";
 import { colors, fontSize, spacing, radius } from "../theme";
@@ -8,9 +8,10 @@ interface Props {
   message: Message;
   isOwn: boolean;
   onEdit?: (message: Message) => void;
+  onDelete?: (messageId: string) => void;
 }
 
-export default memo(function MessageItem({ message, isOwn, onEdit }: Props) {
+export default memo(function MessageItem({ message, isOwn, onEdit, onDelete }: Props) {
   const time = message.createdAt
     ? formatDistanceToNow(new Date(message.createdAt), { addSuffix: true })
     : "just now";
@@ -30,7 +31,13 @@ export default memo(function MessageItem({ message, isOwn, onEdit }: Props) {
     <View style={[styles.container, isOwn && styles.containerOwn]}>
       {isOwn && onEdit ? (
         <Pressable
-          onLongPress={() => onEdit(message)}
+          onLongPress={() => {
+            Alert.alert("Message options", "What would you like to do?", [
+              { text: "Edit", onPress: () => onEdit(message) },
+              { text: "Delete", style: "destructive", onPress: () => onDelete?.(message.id) },
+              { text: "Cancel", style: "cancel" },
+            ]);
+          }}
           style={({ pressed }) => pressed && styles.pressed}
         >
           {bubble}

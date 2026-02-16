@@ -16,6 +16,7 @@ interface Props {
   currentUserId: string;
   loading: boolean;
   onEdit: (message: Message) => void;
+  onDelete: (messageId: string) => void;
   onLoadMore: () => void;
   loadingMore: boolean;
 }
@@ -25,6 +26,7 @@ export default function MessageList({
   currentUserId,
   loading,
   onEdit,
+  onDelete,
   onLoadMore,
   loadingMore,
 }: Props) {
@@ -32,9 +34,14 @@ export default function MessageList({
 
   const renderItem: ListRenderItem<Message> = useCallback(
     ({ item }) => (
-      <MessageItem message={item} isOwn={item.senderId === currentUserId} onEdit={onEdit} />
+      <MessageItem
+        message={item}
+        isOwn={item.senderId === currentUserId}
+        onEdit={onEdit}
+        onDelete={onDelete}
+      />
     ),
-    [currentUserId, onEdit],
+    [currentUserId, onEdit, onDelete],
   );
 
   if (loading) {

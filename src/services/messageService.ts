@@ -6,6 +6,7 @@ import {
   onSnapshot,
   addDoc,
   updateDoc,
+  deleteDoc,
   doc,
   getDocs,
   startAfter,
@@ -83,4 +84,8 @@ export async function editMessage(messageId: string, text: string) {
     text,
     editedAt: serverTimestamp(),
   });
+}
+
+export async function deleteMessage(messageId: string) {
+  await deleteDoc(doc(db, MESSAGES_COLLECTION, messageId));
 }

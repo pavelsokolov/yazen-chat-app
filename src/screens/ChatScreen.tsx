@@ -18,6 +18,7 @@ export default function ChatScreen() {
     setEditingMessage,
     loadMore,
     sendMessage,
+    deleteMessage,
   } = useChat();
 
   if (!user) return null;
@@ -54,6 +55,7 @@ export default function ChatScreen() {
           currentUserId={user.uid}
           loading={loading}
           onEdit={setEditingMessage}
+          onDelete={deleteMessage}
           onLoadMore={loadMore}
           loadingMore={loadingMore}
         />

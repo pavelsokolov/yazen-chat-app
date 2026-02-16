@@ -3,12 +3,7 @@ import type { QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
 import { useAuth } from "../contexts/AuthContext";
 import type { Message } from "../types/Message";
 import { MAX_MESSAGE_LENGTH } from "../constants";
-import {
-  subscribeToMessages,
-  fetchOlderMessages,
-  createMessage,
-  editMessage,
-} from "../services/messageService";
+import * as messageService from "../services/messageService";
 
 export function useChat() {
   const { user, displayName } = useAuth();
@@ -24,7 +19,7 @@ export function useChat() {
   const oldestPaginatedRef = useRef<QueryDocumentSnapshot<DocumentData> | null>(null);
 
   useEffect(() => {
-    const unsubscribe = subscribeToMessages(
+    const unsubscribe = messageService.subscribeToMessages(
       (messages, oldestDoc) => {
         setLiveMessages(messages);
         if (oldestDoc) oldestSnapshotRef.current = oldestDoc;
@@ -55,7 +50,7 @@ export function useChat() {
     loadingMoreRef.current = true;
     setLoadingMore(true);
     try {
-      const result = await fetchOlderMessages(cursor);
+      const result = await messageService.fetchOlderMessages(cursor);
       hasMoreRef.current = result.hasMore;
       if (result.oldestDoc) oldestPaginatedRef.current = result.oldestDoc;
       if (result.messages.length > 0) {
@@ -77,14 +72,18 @@ export function useChat() {
       }
 
       if (editingMessage) {
-        await editMessage(editingMessage.id, text);
+        await messageService.editMessage(editingMessage.id, text);
         setEditingMessage(null);
       } else {
-        await createMessage(text, user.uid, displayName);
+        await messageService.createMessage(text, user.uid, displayName);
       }
     },
     [user, displayName, editingMessage],
   );
+
+  const deleteMessage = useCallback(async (messageId: string) => {
+    await messageService.deleteMessage(messageId);
+  }, []);
 
   return {
     messages,
@@ -95,5 +94,6 @@ export function useChat() {
     setEditingMessage,
     loadMore,
     sendMessage,
+    deleteMessage,
   };
 }
