@@ -28,7 +28,7 @@ A real-time chat app built with React Native (Expo), TypeScript, and Firebase.
 
 ```bash
 git clone <repo-url>
-cd yazen-chat-mobile
+cd yazen-chat-app
 npm install
 ```
 
