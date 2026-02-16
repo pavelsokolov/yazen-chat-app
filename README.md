@@ -12,7 +12,7 @@ A real-time chat app built with React Native (Expo), TypeScript, and Firebase.
 
 ## Tech Stack
 
-- **React Native** (Expo) + TypeScript
+- **React Native** (Expo SDK 54) + TypeScript
 - **Firebase** — Firestore (real-time database) + Anonymous Auth
 - **React Navigation** — native stack navigator
 
