@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { onAuthStateChanged, signInAnonymously, signOut, type User } from "firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { auth } from "../config/firebase";
@@ -66,13 +66,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  async function setDisplayName(name: string) {
+  const setDisplayName = useCallback(async (name: string) => {
     await AsyncStorage.setItem(DISPLAY_NAME_KEY, name);
     setDisplayNameState(name);
     await signInAnonymously(auth);
-  }
+  }, []);
 
-  async function logout() {
+  const logout = useCallback(async () => {
     try {
       await AsyncStorage.removeItem(DISPLAY_NAME_KEY);
       setDisplayNameState(null);
@@ -80,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       console.warn("Logout failed:", err);
     }
-  }
+  }, []);
 
   return (
     <AuthContext.Provider value={{ user, displayName, loading, setDisplayName, logout }}>
