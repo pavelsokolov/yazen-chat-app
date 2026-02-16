@@ -50,7 +50,7 @@ export default function ChatScreen() {
 
         <MessageList
           messages={messages}
-          currentUserId={user.uid}
+          currentUserId={user!.uid}
           loading={loading}
           onEdit={setEditingMessage}
           onDelete={deleteMessage}
