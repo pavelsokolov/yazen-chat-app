@@ -16,3 +16,15 @@ export const colors = {
 export const fontSize = { xs: 11, sm: 12, md: 13, base: 14, lg: 16, xl: 20, xxl: 32 };
 export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 32 };
 export const radius = { sm: 8, md: 16, lg: 20 };
+export const pressedStyle = { opacity: 0.7 } as const;
+export const buttonDisabledStyle = { opacity: 0.5 } as const;
+export const buttonTextStyle = {
+  color: colors.white,
+  fontSize: fontSize.lg,
+  fontWeight: "600",
+} as const;
+export const centeredContainer = {
+  flex: 1,
+  justifyContent: "center",
+  alignItems: "center",
+} as const;

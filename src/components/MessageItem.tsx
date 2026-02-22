@@ -2,7 +2,7 @@ import { memo } from "react";
 import { View, Text, Pressable, StyleSheet, Alert } from "react-native";
 import { formatDistanceToNow } from "date-fns";
 import type { Message } from "../types/Message";
-import { colors, fontSize, spacing, radius } from "../theme";
+import { colors, fontSize, spacing, radius, pressedStyle } from "../theme";
 
 interface Props {
   message: Message;
@@ -38,7 +38,7 @@ export default memo(function MessageItem({ message, isOwn, onEdit, onDelete }: P
               { text: "Cancel", style: "cancel" },
             ]);
           }}
-          style={({ pressed }) => pressed && styles.pressed}
+          style={({ pressed }) => pressed && pressedStyle}
         >
           {bubble}
         </Pressable>
@@ -91,8 +91,5 @@ const styles = StyleSheet.create({
   },
   timeOwn: {
     color: colors.ownBubbleTimeText,
-  },
-  pressed: {
-    opacity: 0.7,
   },
 });

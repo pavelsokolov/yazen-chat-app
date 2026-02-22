@@ -28,30 +28,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
+    let initialized = false;
 
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
-      if (mounted) setUser(u);
-    });
-
-    async function init() {
-      const savedName = await AsyncStorage.getItem(DISPLAY_NAME_KEY);
-      if (!mounted) return;
-
-      setDisplayNameState(savedName);
-
-      if (savedName && !auth.currentUser) {
-        await signInAnonymously(auth);
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (!initialized) {
+        initialized = true;
+        try {
+          const savedName = await AsyncStorage.getItem(DISPLAY_NAME_KEY);
+          if (!mounted) return;
+          setDisplayNameState(savedName);
+          if (savedName && !currentUser) await signInAnonymously(auth);
+          if (mounted) {
+            setUser(auth.currentUser);
+            setLoading(false);
+          }
+        } catch (e) {
+          console.warn("Auth init failed:", e);
+          if (mounted) setLoading(false);
+        }
+      } else {
+        if (mounted) setUser(currentUser);
       }
-
-      if (mounted) {
-        setUser(auth.currentUser);
-        setLoading(false);
-      }
-    }
-
-    init().catch((e) => {
-      console.warn("Auth init failed:", e);
-      if (mounted) setLoading(false);
     });
 
     return () => {

@@ -1,7 +1,16 @@
 import { useState } from "react";
 import { View, TextInput, Pressable, Text, StyleSheet, ActivityIndicator } from "react-native";
+import { useNetInfo } from "@react-native-community/netinfo";
 import type { Message } from "../types/Message";
-import { colors, fontSize, spacing, radius } from "../theme";
+import {
+  colors,
+  fontSize,
+  spacing,
+  radius,
+  pressedStyle,
+  buttonTextStyle,
+  buttonDisabledStyle,
+} from "../theme";
 import { MAX_MESSAGE_LENGTH } from "../constants";
 
 interface Props {
@@ -11,9 +20,11 @@ interface Props {
 }
 
 export default function MessageInput({ onSend, editingMessage, onCancelEdit }: Props) {
+  const { isConnected } = useNetInfo();
   const [text, setText] = useState(editingMessage?.text ?? "");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const offline = isConnected === false;
 
   function handleCancel() {
     setText("");
@@ -36,9 +47,6 @@ export default function MessageInput({ onSend, editingMessage, onCancelEdit }: P
     }
   }
 
-  const charCount = text.length;
-  const showCounter = charCount > MAX_MESSAGE_LENGTH * 0.8;
-
   return (
     <View style={styles.wrapper}>
       {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -47,15 +55,10 @@ export default function MessageInput({ onSend, editingMessage, onCancelEdit }: P
           <Text style={styles.editBarText}>Editing message</Text>
           <Pressable onPress={handleCancel}>
             {({ pressed }) => (
-              <Text style={[styles.editBarCancel, pressed && styles.pressed]}>Cancel</Text>
+              <Text style={[styles.editBarCancel, pressed && pressedStyle]}>Cancel</Text>
             )}
           </Pressable>
         </View>
-      )}
-      {showCounter && (
-        <Text style={[styles.charCount, charCount > MAX_MESSAGE_LENGTH && styles.charCountOver]}>
-          {charCount}/{MAX_MESSAGE_LENGTH}
-        </Text>
       )}
       <View style={styles.row}>
         <TextInput
@@ -70,16 +73,16 @@ export default function MessageInput({ onSend, editingMessage, onCancelEdit }: P
         <Pressable
           style={({ pressed }) => [
             styles.button,
-            (!text.trim() || sending) && styles.buttonDisabled,
-            pressed && styles.pressed,
+            (!text.trim() || sending || offline) && buttonDisabledStyle,
+            pressed && pressedStyle,
           ]}
           onPress={handleSend}
-          disabled={!text.trim() || sending}
+          disabled={!text.trim() || sending || offline}
         >
           {sending ? (
             <ActivityIndicator color={colors.white} size="small" />
           ) : (
-            <Text style={styles.buttonText}>{editingMessage ? "Save" : "Send"}</Text>
+            <Text style={buttonTextStyle}>{editingMessage ? "Save" : "Send"}</Text>
           )}
         </Pressable>
       </View>
@@ -108,8 +111,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.editBarBg,
     borderRadius: radius.sm,
     paddingHorizontal: spacing.md,
-    paddingVertical: 6,
-    marginBottom: 6,
+    paddingVertical: spacing.sm,
+    marginBottom: spacing.sm,
   },
   editBarText: {
     fontSize: fontSize.md,
@@ -118,16 +121,6 @@ const styles = StyleSheet.create({
   editBarCancel: {
     fontSize: fontSize.md,
     color: colors.textMuted,
-  },
-  charCount: {
-    fontSize: fontSize.xs,
-    color: colors.textMuted,
-    textAlign: "right",
-    marginBottom: 2,
-    paddingHorizontal: spacing.xs,
-  },
-  charCountOver: {
-    color: colors.error,
   },
   row: {
     flexDirection: "row",
@@ -151,15 +144,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  pressed: {
-    opacity: 0.7,
-  },
-  buttonText: {
-    color: colors.white,
-    fontSize: fontSize.lg,
-    fontWeight: "600",
-  },
+  buttonDisabled: buttonDisabledStyle,
+  buttonText: buttonTextStyle,
 });

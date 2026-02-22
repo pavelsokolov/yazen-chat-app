@@ -8,7 +8,7 @@ import {
   type ListRenderItem,
 } from "react-native";
 import type { Message } from "../types/Message";
-import { colors, fontSize, spacing } from "../theme";
+import { colors, fontSize, spacing, centeredContainer } from "../theme";
 import MessageItem from "./MessageItem";
 
 interface Props {
@@ -46,7 +46,7 @@ export default function MessageList({
 
   if (loading) {
     return (
-      <View style={styles.centered}>
+      <View style={centeredContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.statusText}>Loading messages...</Text>
       </View>
@@ -55,7 +55,7 @@ export default function MessageList({
 
   if (messages.length === 0) {
     return (
-      <View style={styles.centered}>
+      <View style={centeredContainer}>
         <Text style={styles.statusText}>No messages yet. Say hello!</Text>
       </View>
     );
@@ -80,11 +80,6 @@ export default function MessageList({
 }
 
 const styles = StyleSheet.create({
-  centered: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   statusText: {
     color: colors.textMuted,
     fontSize: fontSize.lg,

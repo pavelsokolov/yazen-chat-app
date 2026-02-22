@@ -2,7 +2,7 @@ import { View, Text, Pressable, StyleSheet, KeyboardAvoidingView, Platform } fro
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../contexts/AuthContext";
 import { useChat } from "../hooks/useChat";
-import { colors, fontSize, spacing } from "../theme";
+import { colors, fontSize, spacing, pressedStyle } from "../theme";
 import MessageList from "../components/MessageList";
 import MessageInput from "../components/MessageInput";
 import OfflineBanner from "../components/OfflineBanner";
@@ -26,7 +26,6 @@ export default function ChatScreen() {
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={0}
       >
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Yazen Chat</Text>
@@ -34,7 +33,7 @@ export default function ChatScreen() {
             <Text style={styles.username}>{displayName}</Text>
             <Pressable onPress={logout}>
               {({ pressed }) => (
-                <Text style={[styles.logoutText, pressed && styles.pressed]}>Leave</Text>
+                <Text style={[styles.logoutText, pressed && pressedStyle]}>Leave</Text>
               )}
             </Pressable>
           </View>
@@ -104,9 +103,6 @@ const styles = StyleSheet.create({
     fontSize: fontSize.base,
     color: colors.error,
     fontWeight: "600",
-  },
-  pressed: {
-    opacity: 0.7,
   },
   errorBanner: {
     backgroundColor: colors.error,

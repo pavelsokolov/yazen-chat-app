@@ -10,7 +10,15 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useAuth } from "../contexts/AuthContext";
-import { colors, fontSize, spacing, radius } from "../theme";
+import {
+  colors,
+  fontSize,
+  spacing,
+  radius,
+  pressedStyle,
+  buttonTextStyle,
+  buttonDisabledStyle,
+} from "../theme";
 import { MAX_DISPLAY_NAME_LENGTH } from "../constants";
 
 export default function DisplayNameScreen() {
@@ -61,8 +69,8 @@ export default function DisplayNameScreen() {
         <Pressable
           style={({ pressed }) => [
             styles.button,
-            (!name.trim() || loading) && styles.buttonDisabled,
-            pressed && styles.pressed,
+            (!name.trim() || loading) && buttonDisabledStyle,
+            pressed && pressedStyle,
           ]}
           onPress={handleJoin}
           disabled={!name.trim() || loading}
@@ -70,7 +78,7 @@ export default function DisplayNameScreen() {
           {loading ? (
             <ActivityIndicator color={colors.white} />
           ) : (
-            <Text style={styles.buttonText}>Join Chat</Text>
+            <Text style={buttonTextStyle}>Join Chat</Text>
           )}
         </Pressable>
       </View>
@@ -122,16 +130,5 @@ const styles = StyleSheet.create({
     padding: 14,
     alignItems: "center",
     marginTop: spacing.sm,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  pressed: {
-    opacity: 0.7,
-  },
-  buttonText: {
-    color: colors.white,
-    fontSize: fontSize.lg,
-    fontWeight: "600",
   },
 });

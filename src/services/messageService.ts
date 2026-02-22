@@ -12,7 +12,6 @@ import {
   startAfter,
   serverTimestamp,
   type QueryDocumentSnapshot,
-  type DocumentData,
   type Unsubscribe,
   Timestamp,
 } from "firebase/firestore";
@@ -20,7 +19,7 @@ import { db } from "../config/firebase";
 import type { Message } from "../types/Message";
 import { MESSAGES_COLLECTION, PAGE_SIZE } from "../constants";
 
-function docToMessage(doc: QueryDocumentSnapshot<DocumentData>): Message {
+function docToMessage(doc: QueryDocumentSnapshot): Message {
   const data = doc.data();
   return {
     id: doc.id,
@@ -33,7 +32,7 @@ function docToMessage(doc: QueryDocumentSnapshot<DocumentData>): Message {
 }
 
 export function subscribeToMessages(
-  onMessages: (messages: Message[], oldestDoc: QueryDocumentSnapshot<DocumentData>) => void,
+  onMessages: (messages: Message[], oldestDoc: QueryDocumentSnapshot | null) => void,
   onError: (error: Error) => void,
 ): Unsubscribe {
   const q = query(
@@ -45,15 +44,15 @@ export function subscribeToMessages(
   return onSnapshot(
     q,
     (snapshot) => {
-      const messages = snapshot.docs.map(docToMessage).reverse();
-      const oldest = snapshot.docs[snapshot.docs.length - 1];
+      const messages = snapshot.docs.map(docToMessage);
+      const oldest = snapshot.docs[snapshot.docs.length - 1] ?? null;
       onMessages(messages, oldest);
     },
     onError,
   );
 }
 
-export async function fetchOlderMessages(cursor: QueryDocumentSnapshot<DocumentData>) {
+export async function fetchOlderMessages(cursor: QueryDocumentSnapshot) {
   const q = query(
     collection(db, MESSAGES_COLLECTION),
     orderBy("createdAt", "desc"),
@@ -63,7 +62,7 @@ export async function fetchOlderMessages(cursor: QueryDocumentSnapshot<DocumentD
   const snapshot = await getDocs(q);
 
   return {
-    messages: snapshot.docs.map(docToMessage).reverse(),
+    messages: snapshot.docs.map(docToMessage),
     oldestDoc: snapshot.docs[snapshot.docs.length - 1] ?? null,
     hasMore: snapshot.docs.length >= PAGE_SIZE,
   };

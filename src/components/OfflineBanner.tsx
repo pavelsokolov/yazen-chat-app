@@ -9,7 +9,7 @@ export default function OfflineBanner() {
 
   return (
     <View style={styles.banner}>
-      <Text style={styles.text}>You're offline — messages will send when you reconnect</Text>
+      <Text style={styles.text}>You're offline — sending is unavailable</Text>
     </View>
   );
 }

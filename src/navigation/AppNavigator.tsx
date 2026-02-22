@@ -1,8 +1,8 @@
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { ActivityIndicator, View, StyleSheet } from "react-native";
+import { ActivityIndicator, View } from "react-native";
 import { useAuth } from "../contexts/AuthContext";
-import { colors } from "../theme";
+import { colors, centeredContainer } from "../theme";
 import DisplayNameScreen from "../screens/DisplayNameScreen";
 import ChatScreen from "../screens/ChatScreen";
 
@@ -18,7 +18,7 @@ export default function AppNavigator() {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
+      <View style={centeredContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
@@ -36,11 +36,3 @@ export default function AppNavigator() {
     </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  centered: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});
