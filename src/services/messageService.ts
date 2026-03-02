@@ -17,7 +17,11 @@ import {
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 import type { Message } from "../types/Message";
-import { MESSAGES_COLLECTION, PAGE_SIZE } from "../constants";
+import { ROOMS_COLLECTION, PAGE_SIZE } from "../constants";
+
+function messagesCol(roomId: string) {
+  return collection(db, ROOMS_COLLECTION, roomId, "messages");
+}
 
 function docToMessage(doc: QueryDocumentSnapshot): Message {
   const data = doc.data();
@@ -32,14 +36,11 @@ function docToMessage(doc: QueryDocumentSnapshot): Message {
 }
 
 export function subscribeToMessages(
+  roomId: string,
   onMessages: (messages: Message[], oldestDoc: QueryDocumentSnapshot | null) => void,
   onError: (error: Error) => void,
 ): Unsubscribe {
-  const q = query(
-    collection(db, MESSAGES_COLLECTION),
-    orderBy("createdAt", "desc"),
-    limit(PAGE_SIZE),
-  );
+  const q = query(messagesCol(roomId), orderBy("createdAt", "desc"), limit(PAGE_SIZE));
 
   return onSnapshot(
     q,
@@ -52,9 +53,9 @@ export function subscribeToMessages(
   );
 }
 
-export async function fetchOlderMessages(cursor: QueryDocumentSnapshot) {
+export async function fetchOlderMessages(roomId: string, cursor: QueryDocumentSnapshot) {
   const q = query(
-    collection(db, MESSAGES_COLLECTION),
+    messagesCol(roomId),
     orderBy("createdAt", "desc"),
     startAfter(cursor),
     limit(PAGE_SIZE),
@@ -68,8 +69,13 @@ export async function fetchOlderMessages(cursor: QueryDocumentSnapshot) {
   };
 }
 
-export async function createMessage(text: string, senderId: string, senderName: string) {
-  await addDoc(collection(db, MESSAGES_COLLECTION), {
+export async function createMessage(
+  roomId: string,
+  text: string,
+  senderId: string,
+  senderName: string,
+) {
+  await addDoc(messagesCol(roomId), {
     text,
     senderId,
     senderName,
@@ -78,13 +84,13 @@ export async function createMessage(text: string, senderId: string, senderName: 
   });
 }
 
-export async function editMessage(messageId: string, text: string) {
-  await updateDoc(doc(db, MESSAGES_COLLECTION, messageId), {
+export async function editMessage(roomId: string, messageId: string, text: string) {
+  await updateDoc(doc(db, ROOMS_COLLECTION, roomId, "messages", messageId), {
     text,
     editedAt: serverTimestamp(),
   });
 }
 
-export async function deleteMessage(messageId: string) {
-  await deleteDoc(doc(db, MESSAGES_COLLECTION, messageId));
+export async function deleteMessage(roomId: string, messageId: string) {
+  await deleteDoc(doc(db, ROOMS_COLLECTION, roomId, "messages", messageId));
 }

@@ -13,7 +13,7 @@ function mergeMessages(prev: Message[], incoming: Message[]): Message[] {
   );
 }
 
-export function useChat() {
+export function useChat(roomId: string) {
   const { user, displayName } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,19 +26,26 @@ export function useChat() {
   const oldestPaginatedRef = useRef<QueryDocumentSnapshot | null>(null);
 
   useEffect(() => {
+    setMessages([]);
+    setLoading(true);
+    hasMoreRef.current = true;
+    oldestSnapshotRef.current = null;
+    oldestPaginatedRef.current = null;
+
     return messageService.subscribeToMessages(
-      (messages, oldestDoc) => {
-        setMessages((prev) => mergeMessages(prev, messages));
+      roomId,
+      (incoming: Message[], oldestDoc: QueryDocumentSnapshot | null) => {
+        setMessages((prev) => mergeMessages(prev, incoming));
         if (oldestDoc) oldestSnapshotRef.current = oldestDoc;
         setError(null);
         setLoading(false);
       },
-      (err) => {
+      (err: Error) => {
         setError(err.message);
         setLoading(false);
       },
     );
-  }, [setMessages]);
+  }, [roomId]);
 
   const loadMore = useCallback(async () => {
     if (loadingMoreRef.current || !hasMoreRef.current) return;
@@ -49,7 +56,7 @@ export function useChat() {
     loadingMoreRef.current = true;
     setLoadingMore(true);
     try {
-      const result = await messageService.fetchOlderMessages(cursor);
+      const result = await messageService.fetchOlderMessages(roomId, cursor);
       hasMoreRef.current = result.hasMore;
       if (result.oldestDoc) oldestPaginatedRef.current = result.oldestDoc;
       if (result.messages.length > 0) {
@@ -61,7 +68,7 @@ export function useChat() {
       loadingMoreRef.current = false;
       setLoadingMore(false);
     }
-  }, [setMessages]);
+  }, [roomId]);
 
   const sendMessage = useCallback(
     async (text: string) => {
@@ -71,18 +78,21 @@ export function useChat() {
       }
 
       if (editingMessage) {
-        await messageService.editMessage(editingMessage.id, text);
+        await messageService.editMessage(roomId, editingMessage.id, text);
         setEditingMessage(null);
       } else {
-        await messageService.createMessage(text, user.uid, displayName);
+        await messageService.createMessage(roomId, text, user.uid, displayName);
       }
     },
-    [user, displayName, editingMessage],
+    [user, displayName, editingMessage, roomId],
   );
 
-  const deleteMessage = useCallback(async (messageId: string) => {
-    await messageService.deleteMessage(messageId);
-  }, []);
+  const deleteMessage = useCallback(
+    async (messageId: string) => {
+      await messageService.deleteMessage(roomId, messageId);
+    },
+    [roomId],
+  );
 
   return {
     messages,

@@ -1,14 +1,19 @@
 import { View, Text, Pressable, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useAuth } from "../contexts/AuthContext";
 import { useChat } from "../hooks/useChat";
 import { colors, fontSize, spacing, pressedStyle } from "../theme";
 import MessageList from "../components/MessageList";
 import MessageInput from "../components/MessageInput";
 import OfflineBanner from "../components/OfflineBanner";
+import type { RootStackParamList } from "../navigation/AppNavigator";
 
-export default function ChatScreen() {
-  const { user, displayName, logout } = useAuth();
+type Props = NativeStackScreenProps<RootStackParamList, "Chat">;
+
+export default function ChatScreen({ route, navigation }: Props) {
+  const { roomId, roomName } = route.params;
+  const { user, displayName } = useAuth();
   const {
     messages,
     error,
@@ -19,7 +24,7 @@ export default function ChatScreen() {
     loadMore,
     sendMessage,
     deleteMessage,
-  } = useChat();
+  } = useChat(roomId);
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
@@ -28,15 +33,15 @@ export default function ChatScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Yazen Chat</Text>
-          <View style={styles.headerRight}>
-            <Text style={styles.username}>{displayName}</Text>
-            <Pressable onPress={logout}>
+          <View style={styles.headerLeft}>
+            <Pressable onPress={() => navigation.goBack()}>
               {({ pressed }) => (
-                <Text style={[styles.logoutText, pressed && pressedStyle]}>Leave</Text>
+                <Text style={[styles.backText, pressed && pressedStyle]}>← Rooms</Text>
               )}
             </Pressable>
+            <Text style={styles.headerTitle}>{roomName}</Text>
           </View>
+          <Text style={styles.username}>{displayName}</Text>
         </View>
 
         <OfflineBanner />
@@ -85,24 +90,24 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
     backgroundColor: colors.white,
   },
+  headerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  backText: {
+    fontSize: fontSize.base,
+    color: colors.primary,
+    fontWeight: "600",
+  },
   headerTitle: {
     fontSize: fontSize.xl,
     fontWeight: "700",
     color: colors.primary,
   },
-  headerRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-  },
   username: {
     fontSize: fontSize.base,
     color: colors.textSecondary,
-  },
-  logoutText: {
-    fontSize: fontSize.base,
-    color: colors.error,
-    fontWeight: "600",
   },
   errorBanner: {
     backgroundColor: colors.error,
